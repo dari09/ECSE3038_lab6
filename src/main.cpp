@@ -6,11 +6,19 @@
 
 #define endpoint "rg-lab6-api.onrender.com"
 
-#define fanPin 22
-#define lightPin 23
+#define fan 22
+#define light 23
+
+float getTemp(){
+  return random(22.5,34.6);
+}
 
 void setup() {
-  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(fan, OUTPUT);
+  pinMode(light, OUTPUT);
+
+  WiFi.begin(WIFI_USER, WIFI_PASS);
 }
 
 void loop() {
