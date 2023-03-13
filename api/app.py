@@ -39,21 +39,6 @@ location = geolocator.geocode("Hyderabad")
 user_latitude =  location.latitude
 user_longitude = location.longitude
 
-# def get_sunset():
-#   sunset_api_endpoint = f'https://api.sunrise-sunset.org/json?lat={user_latitude}&lng={user_longitude}'
-
-#   sunset_api_response = requests.get(sunset_api_endpoint)
-#   sunset_api_data = sunset_api_response.json()
-
-#   sunset_time = datetime.datetime.strptime(sunset_api_data['results']['sunset'], '%H:%M:%S %p').time()
-#   utc_time = datetime.time(5, 0, 0)
-
-#   date = datetime.date(1, 1, 1)
-#   datetime1 = datetime.datetime.combine(date, sunset_time)
-#   datetime2 = datetime.datetime.combine(date, utc_time)
-#   return  datetime1 - datetime2
-
-
 sunset_api_endpoint = f'https://ecse-sunset-api.onrender.com/api/sunset'
 
 sunset_api_response = requests.get(sunset_api_endpoint)
