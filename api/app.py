@@ -3,7 +3,10 @@ import motor.motor_asyncio
 import pydantic
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
+from geopy.geocoders import Nominatim
 import  datetime 
+from datetime import timedelta
+import time
 import pytz
 
 import requests
@@ -11,8 +14,9 @@ import requests
 app = FastAPI()
 
 origins = [
-    https://dari09-lab6-api.onrender.com
+    "https://dari09-lab6-api.onrender.com",
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -21,48 +25,77 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://ecsebot:Re0E5l79cJUNrf2u@cluster0.2yokb04.mongodb.net/?retryWrites=true&w=majority")
-db = client.smart_devices
-
-
+client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://IOT_CLASS:iotclass@cluster0.irzkjxq.mongodb.net/?retryWrites=true&w=majority")
+db = client.lab_6
+states = db["state"]
 
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
 
+geolocator = Nominatim(user_agent="MyApp")
+
+location = geolocator.geocode("Hyderabad")
+
+user_latitude =  location.latitude
+user_longitude = location.longitude
+
+# def get_sunset():
+#   sunset_api_endpoint = f'https://api.sunrise-sunset.org/json?lat={user_latitude}&lng={user_longitude}'
+
+#   sunset_api_response = requests.get(sunset_api_endpoint)
+#   sunset_api_data = sunset_api_response.json()
+
+#   sunset_time = datetime.datetime.strptime(sunset_api_data['results']['sunset'], '%H:%M:%S %p').time()
+#   utc_time = datetime.time(5, 0, 0)
+
+#   date = datetime.date(1, 1, 1)
+#   datetime1 = datetime.datetime.combine(date, sunset_time)
+#   datetime2 = datetime.datetime.combine(date, utc_time)
+#   return  datetime1 - datetime2
+
+
+sunset_api_endpoint = f'https://ecse-sunset-api.onrender.com/api/sunset'
+
+sunset_api_response = requests.get(sunset_api_endpoint)
+sunset_api_data = sunset_api_response.json()
+
+sunset_time = datetime.datetime.strptime(sunset_api_data['sunset'], '%Y-%m-%dT%H:%M:%S.%f').time()
+now_time = datetime.datetime.now(pytz.timezone('Jamaica')).time()
+
+
+datetime1 = datetime.datetime.strptime(str(sunset_time),"%H:%M:%S")
+datetime2 = datetime.datetime.strptime(str(now_time),"%H:%M:%S.%f")
+
+@app.get("/")
+async def home():
+    return {"LAB 6": "redirect to /api/state"}
+
+
+@app.put("/api/state")
+async def toggle(request: Request): 
+  state = await request.json()
+  #final_sunset_time = str(get_sunset())
+  state["light"] = (datetime1<datetime2)
+  state["fan"] = (float(state["temperature"]) >= 28.0) 
+
+  obj = await states.find_one({"tobe":"updated"})
+  
+  if obj:
+    await states.update_one({"tobe":"updated"}, {"$set": state})
+  else:
+    await states.insert_one({**state, "tobe": "updated"})
+  new_obj = await states.find_one({"tobe":"updated"}) 
+  return new_obj,204
+
+
+
 @app.get("/api/state")
 async def get_state():
-  state = await db["data"].find_one({"poke": "mon"})
+  state = await states.find_one({"tobe": "updated"})
+  
+  state["fan"] = (float(state["temperature"]) >= 28.0) 
+  state["light"] = (datetime1<datetime2)
 
   if state == None:
     return {"fan": False, "light": False}
   return state
-
-
-
-@app.put("/api/state")
-async def capture(request: Request): 
-  
-  update = await request.json()
-
-  sunset = requests.get('https://ecse-sunset-api.onrender.com/api/sunset').json()
-
-  s_time = datetime.datetime.strptime(sunset['sunset'], '%Y-%m-%dT%H:%M:%S.%f').time()
-  current_time = datetime.datetime.now(pytz.timezone('Jamaica')).time()
-  datetime1 = datetime.datetime.strptime(str(s_time),"%H:%M:%S")
-  datetime2 = datetime.datetime.strptime(str(current_time),"%H:%M:%S.%f")
-
-
-  
-  update["light"] = (datetime1<datetime2)
-  update["fan"] = (float(update["temperature"]) >= 28.0) 
-
-  find = await db["data"].find_one({"poke": "mon"})
-  
-  if find:
-    await db["data"].update_one(({"poke": "mon"}), {"$set": update})
-    find = await db["data"].find_one({"poke": "mon"})
-    return find,204
-  else:
-    await db["data"].insert_one({**update, "poke": "mon"})
-    find = await db["data"].find_one({"poke": "mon"})
-    return find,204
