@@ -2,3 +2,4 @@
 .vscode
 env.h
 venv
+__pycache__
