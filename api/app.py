@@ -26,8 +26,8 @@ app.add_middleware(
 )
 
 client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://ecse3038:eSPkUmisbfmpUomG@cluster0.vxbd73b.mongodb.net/?retryWrites=true&w=majority")
-db = client.lab_6
-states = db["state"]
+db = client.mydb
+states = db["states"]
 
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
@@ -39,7 +39,7 @@ location = geolocator.geocode("Hyderabad")
 user_latitude =  location.latitude
 user_longitude = location.longitude
 
-sunset_api_endpoint = f'https://ecse-sunset-api.onrender.com/api/sunset'
+sunset_api_endpoint = f'https://example.com/api/sunset'
 
 sunset_api_response = requests.get(sunset_api_endpoint)
 sunset_api_data = sunset_api_response.json()
@@ -53,34 +53,33 @@ datetime2 = datetime.datetime.strptime(str(now_time),"%H:%M:%S.%f")
 
 @app.get("/")
 async def home():
-    return {"LAB 6": "redirect to /api/state"}
+    return {"Welcome": "This is an API for controlling the state of a device."}
 
 
 @app.put("/api/state")
 async def toggle(request: Request): 
-  state = await request.json()
-  #final_sunset_time = str(get_sunset())
-  state["light"] = (datetime1<datetime2)
-  state["fan"] = (float(state["temperature"]) >= 28.0) 
+    state = await request.json()
+    state["light"] = (datetime1<datetime2)
+    state["fan"] = (float(state["temperature"]) >= 28.0) 
 
-  obj = await states.find_one({"tobe":"updated"})
+    obj = await states.find_one({"tobe":"updated"})
   
-  if obj:
-    await states.update_one({"tobe":"updated"}, {"$set": state})
-  else:
-    await states.insert_one({**state, "tobe": "updated"})
-  new_obj = await states.find_one({"tobe":"updated"}) 
-  return new_obj,204
+    if obj:
+        await states.update_one({"tobe":"updated"}, {"$set": state})
+    else:
+        await states.insert_one({**state, "tobe": "updated"})
+    new_obj = await states.find_one({"tobe":"updated"}) 
+    return new_obj,204
 
 
 
 @app.get("/api/state")
 async def get_state():
-  state = await states.find_one({"tobe": "updated"})
+    state = await states.find_one({"tobe": "updated"})
   
-  state["fan"] = (float(state["temperature"]) >= 28.0) 
-  state["light"] = (datetime1<datetime2)
+    state["fan"] = (float(state["temperature"]) >= 28.0) 
+    state["light"] = (datetime1<datetime2)
 
-  if state == None:
-    return {"fan": False, "light": False}
-  return state
+    if state == None:
+        return {"fan": False, "light": False}
+    return state
