@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 #include "env.h" 
 
-#define endpoint "rg-lab6-api.onrender.com"
+#define endpoint "dari09-lab6-api.onrender.com"
 
 #define fan 22
 #define light 23
@@ -96,8 +96,8 @@ void loop() {
     bool temp = docget["fan"]; 
     bool light= docget["light"]; 
 
-    digitalWrite(fanPin,temp);
-    digitalWrite(lightPin,temp);
+    digitalWrite(fan,temp);
+    digitalWrite(light,temp);
     
     // Free resources
     http.end();
