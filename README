@@ -1,4 +1,4 @@
-## Lab Description
+# Lab 6 Description
 The code is designed for a project that controls electronic devices connected to the ESP32 module. The project consists of two parts: an API accessible via the internet and an Arduino sketch that is programmed on the ESP32 module.
 
 ## Embedded Section
