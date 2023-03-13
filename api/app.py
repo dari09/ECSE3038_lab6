@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://IOT_CLASS:iotclass@cluster0.irzkjxq.mongodb.net/?retryWrites=true&w=majority")
+client = motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://ecse3038:eSPkUmisbfmpUomG@cluster0.vxbd73b.mongodb.net/?retryWrites=true&w=majority")
 db = client.lab_6
 states = db["state"]
 
