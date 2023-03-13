@@ -19,8 +19,91 @@ void setup() {
   pinMode(light, OUTPUT);
 
   WiFi.begin(WIFI_USER, WIFI_PASS);
+  Serial.println("");
+  Serial.println("Connecting");
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("");
+    Serial.println("");
+    HTTPClient http;
+
+    String url = "https://" + String(endpoint) + "/api/state";
+    http.begin(url);
+    http.addHeader("Content-type", "application/json");
+    http.addHeader("Content-length", "23");
+
+    StaticJsonDocument<1024> docput;
+    String httpRequestData;
+
+    docput["temperature"] = getTemp();
+
+    serializeJson(docput, httpRequestData);
+
+    int httpResponseCode = http.PUT(httpRequestData);
+    String http_response;
+     if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+
+      Serial.print("HTTP Response from server: ");
+      http_response = http.getString();
+      Serial.println(http_response);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+
+    http.end();    
+    http.begin(url);
+    httpResponseCode = http.GET();
+
+    Serial.println("");
+    Serial.println("");
+
+    if (httpResponseCode>0) {
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+
+        Serial.print("Response from server: ");
+        http_response = http.getString();
+        Serial.println(http_response);
+      }
+      else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+    }
+ 
+    StaticJsonDocument<1024> docget;
+
+    DeserializationError error = deserializeJson(docget, http_response);
+
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.c_str());
+      return;
+    }
+    
+    bool temp = docget["fan"]; 
+    bool light= docget["light"]; 
+
+    digitalWrite(fanPin,temp);
+    digitalWrite(lightPin,temp);
+    
+    // Free resources
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+  
 }
